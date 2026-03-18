@@ -29,7 +29,7 @@ It provides a command line interface to manage and interact with various Feishu 
 
 // Execute loads config, builds dependencies, and runs the root command.
 func Execute() {
-	cfg, err := config.LoadFromEnv()
+	cfg, err := config.Load()
 	if err != nil {
 		os.Stderr.WriteString("Error loading config: " + err.Error() + "\n")
 		os.Exit(1)

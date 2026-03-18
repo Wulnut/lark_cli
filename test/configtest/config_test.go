@@ -2,51 +2,143 @@ package configtest
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"lark_cli/internal/config"
 )
 
-func TestLoadFromEnv_Defaults(t *testing.T) {
-	// Clear relevant env vars
-	os.Unsetenv("LARK_BASE_URL")
-	os.Unsetenv("LARK_PLUGIN_ID")
-	os.Unsetenv("LARK_PLUGIN_SECRET")
-	os.Unsetenv("LARK_SESSION_PATH")
+func setupTempHome(t *testing.T) string {
+	t.Helper()
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("LARK_BASE_URL", "")
+	t.Setenv("LARK_PLUGIN_ID", "")
+	t.Setenv("LARK_PLUGIN_SECRET", "")
+	t.Setenv("LARK_SESSION_PATH", "")
+	return home
+}
 
-	cfg, err := config.LoadFromEnv()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+func writeConfigFile(t *testing.T, home string, body string) {
+	t.Helper()
+	dir := filepath.Join(home, ".lark")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatalf("MkdirAll error: %v", err)
 	}
-	if cfg.BaseURL != config.DefaultBaseURL {
-		t.Errorf("BaseURL = %q, want %q", cfg.BaseURL, config.DefaultBaseURL)
-	}
-	if cfg.SessionPath == "" {
-		t.Error("SessionPath should have a default")
+	path := filepath.Join(dir, "config.json")
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatalf("WriteFile error: %v", err)
 	}
 }
 
-func TestLoadFromEnv_CustomValues(t *testing.T) {
-	t.Setenv("LARK_BASE_URL", "https://custom.example.com")
-	t.Setenv("LARK_PLUGIN_ID", "test_id")
-	t.Setenv("LARK_PLUGIN_SECRET", "test_secret")
-	t.Setenv("LARK_SESSION_PATH", "/tmp/test-session.json")
+func TestLoad_DefaultsWithoutEnvAndConfigFile(t *testing.T) {
+	home := setupTempHome(t)
 
-	cfg, err := config.LoadFromEnv()
+	cfg, err := config.Load()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if cfg.BaseURL != "https://custom.example.com" {
-		t.Errorf("BaseURL = %q, want custom", cfg.BaseURL)
+
+	if cfg.BaseURL != config.DefaultBaseURL {
+		t.Errorf("BaseURL = %q, want %q", cfg.BaseURL, config.DefaultBaseURL)
 	}
-	if cfg.PluginID != "test_id" {
+	wantSessionPath := filepath.Join(home, ".lark", "session.json")
+	if cfg.SessionPath != wantSessionPath {
+		t.Errorf("SessionPath = %q, want %q", cfg.SessionPath, wantSessionPath)
+	}
+}
+
+func TestLoad_UsesConfigFileValues(t *testing.T) {
+	home := setupTempHome(t)
+	writeConfigFile(t, home, `{
+  "base_url": "https://file.example.com",
+  "plugin_id": "file_id",
+  "plugin_secret": "file_secret",
+  "session_path": "/tmp/file-session.json"
+}`)
+
+	cfg, err := config.Load()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if cfg.BaseURL != "https://file.example.com" {
+		t.Errorf("BaseURL = %q", cfg.BaseURL)
+	}
+	if cfg.PluginID != "file_id" {
 		t.Errorf("PluginID = %q", cfg.PluginID)
 	}
-	if cfg.PluginSecret != "test_secret" {
+	if cfg.PluginSecret != "file_secret" {
 		t.Errorf("PluginSecret = %q", cfg.PluginSecret)
 	}
-	if cfg.SessionPath != "/tmp/test-session.json" {
+	if cfg.SessionPath != "/tmp/file-session.json" {
 		t.Errorf("SessionPath = %q", cfg.SessionPath)
+	}
+}
+
+func TestLoad_EnvOverridesConfigFile(t *testing.T) {
+	home := setupTempHome(t)
+	writeConfigFile(t, home, `{
+  "base_url": "https://file.example.com",
+  "plugin_id": "file_id",
+  "plugin_secret": "file_secret",
+  "session_path": "/tmp/file-session.json"
+}`)
+	t.Setenv("LARK_BASE_URL", "https://env.example.com")
+	t.Setenv("LARK_PLUGIN_ID", "env_id")
+	t.Setenv("LARK_PLUGIN_SECRET", "env_secret")
+	t.Setenv("LARK_SESSION_PATH", "/tmp/env-session.json")
+
+	cfg, err := config.Load()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if cfg.BaseURL != "https://env.example.com" {
+		t.Errorf("BaseURL = %q", cfg.BaseURL)
+	}
+	if cfg.PluginID != "env_id" {
+		t.Errorf("PluginID = %q", cfg.PluginID)
+	}
+	if cfg.PluginSecret != "env_secret" {
+		t.Errorf("PluginSecret = %q", cfg.PluginSecret)
+	}
+	if cfg.SessionPath != "/tmp/env-session.json" {
+		t.Errorf("SessionPath = %q", cfg.SessionPath)
+	}
+}
+
+func TestLoad_MissingConfigFileDoesNotError(t *testing.T) {
+	setupTempHome(t)
+
+	if _, err := config.Load(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestLoad_InvalidConfigFileJSONReturnsError(t *testing.T) {
+	home := setupTempHome(t)
+	writeConfigFile(t, home, `{"plugin_id":`)
+
+	if _, err := config.Load(); err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestLoad_ValidateForPluginTokenPassesWithConfigFileCredentials(t *testing.T) {
+	home := setupTempHome(t)
+	writeConfigFile(t, home, `{
+  "base_url": "https://file.example.com",
+  "plugin_id": "file_id",
+  "plugin_secret": "file_secret"
+}`)
+
+	cfg, err := config.Load()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if err := cfg.ValidateForPluginToken(); err != nil {
+		t.Fatalf("expected validate success, got: %v", err)
 	}
 }
 

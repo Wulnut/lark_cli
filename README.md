@@ -16,13 +16,25 @@ go test ./...
 
 ## Usage
 
-### 1) Configure environment variables
+### 1) Configure static settings (recommended)
+
+Create `~/.lark/config.json`:
+
+```json
+{
+  "base_url": "https://project.feishu.cn",
+  "plugin_id": "<your_plugin_id>",
+  "plugin_secret": "<your_plugin_secret>",
+  "session_path": "/Users/<you>/.lark/session.json"
+}
+```
+
+You can still use environment variables, and they have higher priority than file values.
 
 ```bash
 export LARK_BASE_URL="https://project.feishu.cn"
 export LARK_PLUGIN_ID="<your_plugin_id>"
 export LARK_PLUGIN_SECRET="<your_plugin_secret>"
-# Optional, default is ~/.lark/session.json
 export LARK_SESSION_PATH="$HOME/.lark/session.json"
 ```
 
@@ -55,6 +67,24 @@ lark logout
 - OpenAPI calls should use:
   - `X-Plugin-Token: <plugin_access_token>`
   - `X-User-Key: <user_key>`
+
+## Configuration priority
+
+Configuration is loaded with this precedence:
+
+1. Environment variables (`LARK_*`) - highest priority
+2. `~/.lark/config.json`
+3. Built-in defaults
+
+Defaults:
+
+- `base_url`: `https://project.feishu.cn`
+- `session_path`: `~/.lark/session.json`
+
+## Config file vs session file
+
+- `~/.lark/config.json` stores static configuration (`base_url`, `plugin_id`, `plugin_secret`, `session_path`).
+- `~/.lark/session.json` stores runtime login state (`user_key`) and token cache.
 
 ## Environment variables
 
