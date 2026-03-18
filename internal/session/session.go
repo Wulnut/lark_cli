@@ -11,7 +11,7 @@ type Session struct {
 	UserKey   string `json:"user_key"`
 
 	PluginAccessToken          string    `json:"plugin_access_token,omitempty"`
-	PluginAccessTokenExpiresAt time.Time `json:"plugin_access_token_expires_at,omitempty"`
+	PluginAccessTokenExpiresAt time.Time `json:"plugin_access_token_expires_at,omitzero"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`

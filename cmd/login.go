@@ -14,10 +14,11 @@ func NewLoginCmd(deps Deps) *cobra.Command {
 	var way string
 
 	cmd := &cobra.Command{
-		Use:   "login",
-		Short: "Log in to Feishu Project",
-		Long:  "Save user credentials for subsequent API calls.\nCurrently supports: lark login -w user_key <user_key>",
-		Args:  cobra.ExactArgs(1),
+		Use:          "login",
+		Short:        "Log in to Feishu Project",
+		Long:         "Save user credentials for subsequent API calls.\nCurrently supports: lark login -w user_key <user_key>",
+		Args:         cobra.ExactArgs(1),
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if way != "user_key" {
 				return fmt.Errorf("unsupported login method %q: only 'user_key' is supported", way)

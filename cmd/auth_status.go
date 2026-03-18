@@ -13,8 +13,9 @@ func NewAuthStatusCmd(deps Deps) *cobra.Command {
 	var refreshToken bool
 
 	cmd := &cobra.Command{
-		Use:   "status",
-		Short: "Show current authentication status",
+		Use:          "status",
+		Short:        "Show current authentication status",
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 
