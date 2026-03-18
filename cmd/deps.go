@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"io"
-
 	"lark_cli/internal/auth"
 	"lark_cli/internal/config"
 	"lark_cli/internal/session"

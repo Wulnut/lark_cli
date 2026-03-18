@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
-
 	"lark_cli/internal/session"
-
 	"github.com/spf13/cobra"
 )
 

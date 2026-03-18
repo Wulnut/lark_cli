@@ -1,3 +1,11 @@
+/*
+ * @Author: wulnut carepdime@gmail.com
+ * @Date: 2026-03-19 00:16:53
+ * @LastEditors: wulnut carepdime@gmail.com
+ * @LastEditTime: 2026-03-19 00:47:45
+ * @FilePath: /lark_cli/internal/config/config.go
+ * @Description: 配置文件
+ */
 package config
 
 import (

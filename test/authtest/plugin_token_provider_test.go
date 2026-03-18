@@ -18,7 +18,7 @@ type fakeClock struct {
 	now time.Time
 }
 
-func (c *fakeClock) Now() time.Time { return c.now }
+func (c *fakeClock) Now() time.Time          { return c.now }
 func (c *fakeClock) Advance(d time.Duration) { c.now = c.now.Add(d) }
 
 func newTestServer(t *testing.T, token string, expireTime int, errorCode int, errorMsg string) *httptest.Server {
