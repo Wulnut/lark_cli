@@ -26,10 +26,10 @@ Create:
 
 Workflow:
 - Use `actions/checkout@v4`
-- Use `actions/setup-go@v5` with `go-version-file: go.mod` and caching enabled
+- Use `actions/setup-go@v5` with `go-version-file: go.mod` and `cache: true`
 - Steps:
-  1. `go test ./... -count=1`
-  2. `go test -race ./... -count=1`
+  1. `go test -count=1 ./...`
+  2. `go test -race -count=1 ./...`
   3. `go vet ./...`
   4. `test -z "$(gofmt -l .)"`
 
