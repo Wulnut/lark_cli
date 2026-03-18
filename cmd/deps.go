@@ -1,11 +1,21 @@
 package cmd
 
-import "io"
+import (
+	"io"
+
+	"lark_cli/internal/auth"
+	"lark_cli/internal/config"
+	"lark_cli/internal/session"
+)
 
 // Deps holds dependencies injected into commands.
-// Concrete types will be added as internal packages are created.
 type Deps struct {
-	SessionPath string
-	Stdout      io.Writer
-	Stderr      io.Writer
+	Config config.Config
+	Store  session.Store
+
+	PluginTokenProvider auth.PluginTokenProvider
+	HeaderProvider      auth.HeaderProvider
+
+	Stdout io.Writer
+	Stderr io.Writer
 }
