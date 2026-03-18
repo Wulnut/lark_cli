@@ -25,8 +25,8 @@ func NewLoginCmd(deps Deps) *cobra.Command {
 			}
 
 			userKey := args[0]
-			if !strings.HasPrefix(userKey, "ou_") {
-				return fmt.Errorf("invalid user_key %q: must start with 'ou_'", userKey)
+			if strings.TrimSpace(userKey) == "" {
+				return fmt.Errorf("invalid user_key: must not be empty")
 			}
 
 			ctx := cmd.Context()

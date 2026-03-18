@@ -60,16 +60,22 @@ func TestLogin_ValidUserKey(t *testing.T) {
 	}
 }
 
-func TestLogin_InvalidPrefix(t *testing.T) {
-	deps, _ := newTestDeps(t)
+func TestLogin_NonOuPrefixAllowed(t *testing.T) {
+	deps, path := newTestDeps(t)
 
 	root := cmd.NewRootCmd(deps)
-	root.SetArgs([]string{"login", "-w", "user_key", "invalid_key"})
-	root.SilenceUsage = true
-	root.SilenceErrors = true
-	err := root.Execute()
-	if err == nil {
-		t.Fatal("expected error for invalid prefix")
+	root.SetArgs([]string{"login", "-w", "user_key", "7387857889332969475"})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("login should accept non-ou key: %v", err)
+	}
+
+	store := session.NewFileStore(path)
+	sess, err := store.Load(context.Background())
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if sess.UserKey != "7387857889332969475" {
+		t.Errorf("UserKey = %q", sess.UserKey)
 	}
 }
 
