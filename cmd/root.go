@@ -1,12 +1,21 @@
+/*
+ * @Author: liangyz liangyz@seirobitcs.net
+ * @Date: 2026-03-19 18:26:09
+ * @LastEditors: liangyz liangyz@seirobitcs.net
+ * @LastEditTime: 2026-03-20 11:25:06
+ * @FilePath: \lark_cli\cmd\root.go
+ * @Description: root.go
+ */
 package cmd
 
 import (
-	"net/http"
-	"os"
-
+	"fmt"
 	"lark_cli/internal/auth"
 	"lark_cli/internal/config"
 	"lark_cli/internal/session"
+	"lark_cli/internal/tui"
+	"net/http"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -18,6 +27,15 @@ func NewRootCmd(deps Deps) *cobra.Command {
 		Short: "Lark CLI - Feishu Project command line tool",
 		Long: `Lark CLI is a tool for interacting with the Feishu Project OpenAPI.
 It provides a command line interface to manage and interact with various Feishu Project resources.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 {
+				return cmd.Help()
+			}
+			if err := tui.Run(deps.Stdout); err != nil {
+				return fmt.Errorf("interactive UI: %w", err)
+			}
+			return nil
+		},
 	}
 
 	rootCmd.AddCommand(NewLoginCmd(deps))
