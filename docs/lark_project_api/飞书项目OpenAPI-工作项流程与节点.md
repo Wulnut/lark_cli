@@ -1,10 +1,17 @@
 ---
 title: 飞书项目OpenAPI-工作项流程与节点
-tags: [飞书项目, OpenAPI]
-category: 飞书项目
+source: https://project.feishu.cn/b/helpcenter/1p8d7djs
+author:
+published: 2026-03-17
 created: 2026-03-17
 updated: 2026-03-17
-
+description: 飞书项目OpenAPI工作项流程与节点详解，包含获取工作流详情、WBS视图、节点操作、状态流转等API
+tags: [飞书项目, OpenAPI, 工作项, 流程, 节点, 状态流转]
+category: 飞书项目
+related_docs:
+  - "[[飞书项目API开发者知识库]]"
+  - "[[飞书项目OpenAPI完整API列表]]"
+  - "[[飞书项目OpenAPI字段类型汇总]]"
 ---
 
 

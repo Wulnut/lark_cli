@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"lark_cli/internal/config"
 	"lark_cli/internal/session"
 )
 
@@ -19,79 +20,119 @@ type realClock struct{}
 
 func (realClock) Now() time.Time { return time.Now() }
 
+// ConfigStore provides access to the current config.
+type ConfigStore interface {
+	Load(ctx context.Context) (*config.Config, error)
+}
+
+// AuthContext contains the authentication context needed for API requests.
+type AuthContext struct {
+	UserKey     string
+	PluginToken string
+}
+
 // PluginTokenProvider manages cached plugin_access_token.
 type PluginTokenProvider interface {
-	Get(ctx context.Context) (string, error)
-	ForceRefresh(ctx context.Context) (string, error)
+	GetAuthContext(ctx context.Context) (*AuthContext, error)
+	ForceRefresh(ctx context.Context) (*AuthContext, error)
 }
 
 type pluginTokenProvider struct {
-	store  session.Store
-	client *PluginTokenClient
-	clock  Clock
-	leeway time.Duration
+	configStore ConfigStore
+	store       session.Store
+	client      *PluginTokenClient
+	clock       Clock
+	leeway      time.Duration
 }
 
 // NewPluginTokenProvider creates a provider that caches plugin tokens via the session store.
-func NewPluginTokenProvider(store session.Store, client *PluginTokenClient, leeway time.Duration) PluginTokenProvider {
+func NewPluginTokenProvider(configStore ConfigStore, store session.Store, client *PluginTokenClient, leeway time.Duration) PluginTokenProvider {
 	return &pluginTokenProvider{
-		store:  store,
-		client: client,
-		clock:  realClock{},
-		leeway: leeway,
+		configStore: configStore,
+		store:       store,
+		client:      client,
+		clock:       realClock{},
+		leeway:      leeway,
 	}
 }
 
 // NewPluginTokenProviderWithClock is used for testing with a fake clock.
-func NewPluginTokenProviderWithClock(store session.Store, client *PluginTokenClient, leeway time.Duration, clock Clock) PluginTokenProvider {
+func NewPluginTokenProviderWithClock(configStore ConfigStore, store session.Store, client *PluginTokenClient, leeway time.Duration, clock Clock) PluginTokenProvider {
 	return &pluginTokenProvider{
-		store:  store,
-		client: client,
-		clock:  clock,
-		leeway: leeway,
+		configStore: configStore,
+		store:       store,
+		client:      client,
+		clock:       clock,
+		leeway:      leeway,
 	}
 }
 
-func (p *pluginTokenProvider) Get(ctx context.Context) (string, error) {
-	sess, err := p.store.Load(ctx)
+// GetAuthContext returns a valid auth context, refreshing the token if needed.
+func (p *pluginTokenProvider) GetAuthContext(ctx context.Context) (*AuthContext, error) {
+	cfg, err := p.configStore.Load(ctx)
 	if err != nil {
-		return "", ErrNotLoggedIn
+		return nil, err
 	}
-	if sess.UserKey == "" {
-		return "", ErrNotLoggedIn
-	}
-
-	if sess.PluginAccessToken != "" && p.clock.Now().Before(sess.PluginAccessTokenExpiresAt.Add(-p.leeway)) {
-		return sess.PluginAccessToken, nil
+	if err := cfg.ValidateForOpenAPI(); err != nil {
+		return nil, err
 	}
 
-	return p.refresh(ctx, sess)
-}
+	fingerprint := BuildConfigFingerprint(cfg)
+	now := p.clock.Now().Unix()
 
-func (p *pluginTokenProvider) ForceRefresh(ctx context.Context) (string, error) {
 	sess, err := p.store.Load(ctx)
-	if err != nil {
-		return "", ErrNotLoggedIn
+	// If session doesn't exist or is invalid, refresh will create a new one
+	if err == nil && sess != nil && sess.IsValid(now, fingerprint) {
+		return &AuthContext{
+			UserKey:     cfg.UserKey,
+			PluginToken: sess.PluginAccessToken,
+		}, nil
 	}
-	if sess.UserKey == "" {
-		return "", ErrNotLoggedIn
-	}
-	return p.refresh(ctx, sess)
+
+	return p.refreshLocked(ctx, cfg, fingerprint)
 }
 
-func (p *pluginTokenProvider) refresh(ctx context.Context, sess *session.Session) (string, error) {
+// ForceRefresh forces a token refresh regardless of cache state.
+func (p *pluginTokenProvider) ForceRefresh(ctx context.Context) (*AuthContext, error) {
+	cfg, err := p.configStore.Load(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := cfg.ValidateForOpenAPI(); err != nil {
+		return nil, err
+	}
+
+	fingerprint := BuildConfigFingerprint(cfg)
+	return p.refreshLocked(ctx, cfg, fingerprint)
+}
+
+func (p *pluginTokenProvider) refreshLocked(ctx context.Context, cfg *config.Config, fingerprint string) (*AuthContext, error) {
 	token, expiresIn, err := p.client.Fetch(ctx)
 	if err != nil {
-		return "", err
+		return nil, err
+	}
+
+	now := p.clock.Now()
+	sess, err := p.store.Load(ctx)
+	if err != nil {
+		// If session doesn't exist, create a new one
+		sess = &session.Session{
+			Version:   session.CurrentVersion,
+			LoginType: "user_key",
+		}
 	}
 
 	sess.PluginAccessToken = token
-	sess.PluginAccessTokenExpiresAt = p.clock.Now().Add(expiresIn)
-	sess.UpdatedAt = p.clock.Now()
+	sess.PluginAccessTokenExpiresAt = now.Add(expiresIn)
+	sess.ConfigFingerprint = fingerprint
+	sess.UpdatedAt = now
 
 	if err := p.store.Save(ctx, sess); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return token, nil
+	return &AuthContext{
+		UserKey:     cfg.UserKey,
+		PluginToken: token,
+	}, nil
 }

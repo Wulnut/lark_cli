@@ -1,9 +1,18 @@
 ---
 title: 飞书项目 OpenAPI 完整 API 列表
-tags: [飞书项目, OpenAPI, API列表]
-category: 飞书项目
+source: https://project.feishu.cn/b/helpcenter/1p8d7djs/wlcwhshe
+author:
+published: 2026-03-17
 created: 2026-03-17
-updated: 2026-03-17
+updated: 2026-03-19
+description: 飞书项目 OpenAPI 完整 API 列表，包含 82 个 API，覆盖用户、空间、工作项、配置、视图、评论、度量等模块
+tags: [飞书项目, OpenAPI, API列表, 工作项, 配置, 视图, 评论, 度量, 搜索]
+category: 飞书项目
+api_version: "2.0.0"
+api_count: 82
+related_docs:
+  - "[[飞书项目API开发者知识库]]"
+  - "[[API 列表 - 开发者手册 - 飞书项目帮助中心]]"
 ---
 
 # 飞书项目 OpenAPI 完整 API 列表
@@ -32,6 +41,8 @@ updated: 2026-03-17
 | | 流程模板配置 | 5 个 |
 | | 流程角色配置 | 1 个 |
 | **视图** | 视图管理 | 8 个 |
+| **评论** | 评论管理 | 4 个 |
+| **度量** | 度量管理 | 1 个 |
 | **租户** | 租户管理 | 2 个 |
 
 ---
@@ -49,6 +60,8 @@ updated: 2026-03-17
 | 7 | [配置与视图](./飞书项目OpenAPI-配置与视图.md) | 18 个配置 + 8 个视图 + 4 个空间关联 API |
 | **附录** | [鉴权流程](./飞书项目OpenAPI鉴权流程.md) | 认证、OAuth、Header配置 |
 | **8** | [依赖关系图](./飞书项目OpenAPI依赖关系.md) | 77 个 API 依赖关系 |
+| **9** | [评论管理](./飞书项目OpenAPI-评论.md) | 4 个评论 API |
+| **10** | [度量图表](./飞书项目OpenAPI-度量图表.md) | 1 个度量 API |
 
 ---
 
@@ -211,6 +224,25 @@ updated: 2026-03-17
 
 ---
 
+## 💬 评论
+
+| API | 方法 | 说明 |
+|-----|------|------|
+| 添加评论 | POST | `/open_api/:project_key/work_item/:work_item_type_key/:work_item_id/comment/create` |
+| 获取评论列表 | POST | `/open_api/:project_key/work_item/:work_item_type_key/:work_item_id/comment/list` |
+| 更新评论 | PUT | `/open_api/:project_key/work_item/:work_item_type_key/:work_item_id/comment/:comment_id` |
+| 删除评论 | DELETE | `/open_api/:project_key/work_item/:work_item_type_key/:work_item_id/comment/:comment_id` |
+
+---
+
+## 📊 度量
+
+| API | 方法 | 说明 |
+|-----|------|------|
+| 获取度量图表明细数据 | GET | `/open_api/:project_key/measure/:chart_id` |
+
+---
+
 ## 🏢 租户
 
 | API | 方法 | 说明 |
@@ -222,22 +254,34 @@ updated: 2026-03-17
 
 ## 📎 相关文档
 
-- [[飞书项目OpenAPI搜索参数格式及常用示例]] - 搜索参数详解
-- [[飞书项目OpenAPI全量搜索参数格式及常用示例]] - 跨空间搜索
-- [[飞书项目OpenAPI字段类型汇总]] - 字段类型定义
-- [[飞书项目OpenAPI开发者手册汇总]] - 错误码汇总
-- [[飞书项目OpenAPI依赖关系]] - 4层架构依赖图
+### 官方文档
+- [[API 列表 - 开发者手册 - 飞书项目帮助中心]] - 官方 API 列表
+- [[全量搜索参数格式及常用示例 - 开发者手册 - 飞书项目帮助中心]] - 搜索参数详解
+- [[搜索参数格式及常用示例 - 开发者手册 - 飞书项目帮助中心]] - 搜索参数基础
+- [[字段与属性解析格式 - 开发者手册 - 飞书项目帮助中心]] - 字段类型与属性
+- [[MQL 语法说明 - 开发者手册 - 飞书项目帮助中心]] - MQL 查询语法
+- [[Open API 错误码 - 开发者手册 - 飞书项目帮助中心]] - 错误码参考
+- [[数据结构汇总 - 开发者手册 - 飞书项目帮助中心]] - 数据结构定义
+
+### 知识库整合
+- [[飞书项目API开发者知识库]] - 开发者手册知识库汇总
+- [[飞书项目/飞书项目API结构图谱.canvas]] - API 结构关系图
+
+### 分册文档
+- [[飞书项目OpenAPI-工作项实例搜索]] - 工作项搜索API (5个)
+- [[飞书项目OpenAPI-工作项实例读写]] - 工作项CRUD API (16个)
+- [[飞书项目OpenAPI-工作项流程与节点]] - 流程与节点API (6个)
+- [[飞书项目OpenAPI-子任务]] - 子任务API (6个)
+- [[飞书项目OpenAPI-用户与空间]] - 用户与空间API (7个)
+- [[飞书项目OpenAPI-附件与群组]] - 附件与群组API (5个)
+- [[飞书项目OpenAPI-配置与视图]] - 配置与视图API (26个)
+- [[飞书项目OpenAPI-评论]] - 评论管理API (4个)
+- [[飞书项目OpenAPI-度量图表]] - 度量图表API (1个)
 - [[飞书项目OpenAPI鉴权流程]] - OAuth认证流程
-- [[飞书项目OpenAPI-工作项实例搜索]] - 工作项搜索API
-- [[飞书项目OpenAPI-工作项实例读写]] - 工作项CRUD API
-- [[飞书项目OpenAPI-工作项流程与节点]] - 流程与节点API
-- [[飞书项目OpenAPI-子任务]] - 子任务API
-- [[飞书项目OpenAPI-用户与空间]] - 用户与空间API
-- [[飞书项目OpenAPI-附件与群组]] - 附件与群组API
-- [[飞书项目OpenAPI-配置与视图]] - 配置与视图API
+- [[飞书项目OpenAPI依赖关系]] - API 依赖关系图
 
 ---
 
 ## 🏷️ 标签
 
-#飞书项目 #OpenAPI #API列表 #完整API #工作项 #配置
+#飞书项目 #OpenAPI #API列表 #完整API #工作项 #配置 #评论 #度量

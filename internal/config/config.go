@@ -20,18 +20,20 @@ import (
 const DefaultBaseURL = "https://project.feishu.cn"
 
 type Config struct {
-	BaseURL       string
-	PluginID      string
-	PluginSecret  string
-	SessionPath   string
-	HTTPTimeout   time.Duration
-	RefreshLeeway time.Duration
+	BaseURL        string
+	PluginID       string
+	PluginSecret   string
+	UserKey        string
+	SessionPath    string
+	HTTPTimeout    time.Duration
+	RefreshLeeway  time.Duration
 }
 
 type fileConfig struct {
 	BaseURL      string `json:"base_url"`
 	PluginID     string `json:"plugin_id"`
 	PluginSecret string `json:"plugin_secret"`
+	UserKey      string `json:"user_key"`
 	SessionPath  string `json:"session_path"`
 }
 
@@ -62,6 +64,9 @@ func Load() (Config, error) {
 	}
 	if fc.PluginSecret != "" {
 		cfg.PluginSecret = fc.PluginSecret
+	}
+	if fc.UserKey != "" {
+		cfg.UserKey = fc.UserKey
 	}
 	if fc.SessionPath != "" {
 		cfg.SessionPath = fc.SessionPath
@@ -118,20 +123,26 @@ func applyEnvOverrides(c *Config) {
 	if v := os.Getenv("LARK_PLUGIN_SECRET"); v != "" {
 		c.PluginSecret = v
 	}
+	if v := os.Getenv("LARK_USER_KEY"); v != "" {
+		c.UserKey = v
+	}
 	if v := os.Getenv("LARK_SESSION_PATH"); v != "" {
 		c.SessionPath = v
 	}
 }
 
-func (c Config) ValidateForPluginToken() error {
+func (c Config) ValidateForOpenAPI() error {
 	if c.BaseURL == "" {
-		return errors.New("LARK_BASE_URL is required")
+		return errors.New("base_url is required")
+	}
+	if c.UserKey == "" {
+		return errors.New("user_key is required")
 	}
 	if c.PluginID == "" {
-		return errors.New("LARK_PLUGIN_ID is required")
+		return errors.New("plugin_id is required")
 	}
 	if c.PluginSecret == "" {
-		return errors.New("LARK_PLUGIN_SECRET is required")
+		return errors.New("plugin_secret is required")
 	}
 	return nil
 }

@@ -1,9 +1,18 @@
 ---
 title: 飞书项目OpenAPI获取访问凭证
-tags: [飞书项目, OpenAPI, 访问凭证]
-category: 飞书项目
+source: https://project.feishu.cn/b/helpcenter/1p8d7djs/4id4bvnf
+author:
+published: 2026-03-18
 created: 2026-03-18
 updated: 2026-03-18
+description: 飞书项目OpenAPI访问凭证获取指南，包含plugin_access_token、virtual_plugin_token、user_access_token等凭证类型的获取方法和刷新机制
+tags: [飞书项目, OpenAPI, 访问凭证, plugin_token, user_token, 鉴权]
+category: 飞书项目
+related_docs:
+  - "[[飞书项目API开发者知识库]]"
+  - "[[飞书项目OpenAPI完整API列表]]"
+  - "[[飞书项目OpenAPI鉴权流程]]"
+  - "[[飞书项目OpenAPI概述]]"
 ---
 
 # 获取访问凭证

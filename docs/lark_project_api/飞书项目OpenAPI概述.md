@@ -1,9 +1,18 @@
 ---
 title: 飞书项目OpenAPI概述
-tags: [飞书项目, OpenAPI, 概述]
-category: 飞书项目
+source: https://project.feishu.cn/b/helpcenter/1p8d7djs/4bsmoql6
+author:
+published: 2026-03-18
 created: 2026-03-18
 updated: 2026-03-18
+description: 飞书项目OpenAPI概述，介绍开放平台提供的OpenAPI能力，实现数据的获取与操作，包含API结构、认证流程和基础概念
+tags: [飞书项目, OpenAPI, 概述, 认证]
+category: 飞书项目
+related_docs:
+  - "[[飞书项目API开发者知识库]]"
+  - "[[飞书项目OpenAPI完整API列表]]"
+  - "[[飞书项目OpenAPI鉴权流程]]"
+  - "[[飞书项目OpenAPI获取访问凭证]]"
 ---
 
 # Open API 概述

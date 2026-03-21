@@ -1,10 +1,17 @@
 ---
 title: 飞书项目OpenAPI字段类型汇总
-tags: [飞书项目, OpenAPI]
-category: 飞书项目
+source: https://project.feishu.cn/b/helpcenter/1p8d7djs/1tj6ggll
+author:
+published: 2026-03-17
 created: 2026-03-17
 updated: 2026-03-17
-
+description: 飞书项目OpenAPI字段类型汇总，包含文本类、选项类、数字类、日期类、用户类、关联类等所有字段类型的入参出参格式及富文本格式说明
+tags: [飞书项目, OpenAPI, 字段类型, field_type_key, Properties, Fields, 富文本]
+category: 飞书项目
+related_docs:
+  - "[[飞书项目API开发者知识库]]"
+  - "[[飞书项目OpenAPI完整API列表]]"
+  - "[[字段与属性解析格式 - 开发者手册 - 飞书项目帮助中心]]"
 ---
 
 

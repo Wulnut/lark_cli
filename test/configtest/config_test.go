@@ -15,6 +15,7 @@ func setupTempHome(t *testing.T) string {
 	t.Setenv("LARK_BASE_URL", "")
 	t.Setenv("LARK_PLUGIN_ID", "")
 	t.Setenv("LARK_PLUGIN_SECRET", "")
+	t.Setenv("LARK_USER_KEY", "")
 	t.Setenv("LARK_SESSION_PATH", "")
 	return home
 }
@@ -54,6 +55,7 @@ func TestLoad_UsesConfigFileValues(t *testing.T) {
   "base_url": "https://file.example.com",
   "plugin_id": "file_id",
   "plugin_secret": "file_secret",
+  "user_key": "file_user_key",
   "session_path": "/tmp/file-session.json"
 }`)
 
@@ -71,6 +73,9 @@ func TestLoad_UsesConfigFileValues(t *testing.T) {
 	if cfg.PluginSecret != "file_secret" {
 		t.Errorf("PluginSecret = %q", cfg.PluginSecret)
 	}
+	if cfg.UserKey != "file_user_key" {
+		t.Errorf("UserKey = %q", cfg.UserKey)
+	}
 	if cfg.SessionPath != "/tmp/file-session.json" {
 		t.Errorf("SessionPath = %q", cfg.SessionPath)
 	}
@@ -82,11 +87,13 @@ func TestLoad_EnvOverridesConfigFile(t *testing.T) {
   "base_url": "https://file.example.com",
   "plugin_id": "file_id",
   "plugin_secret": "file_secret",
+  "user_key": "file_user_key",
   "session_path": "/tmp/file-session.json"
 }`)
 	t.Setenv("LARK_BASE_URL", "https://env.example.com")
 	t.Setenv("LARK_PLUGIN_ID", "env_id")
 	t.Setenv("LARK_PLUGIN_SECRET", "env_secret")
+	t.Setenv("LARK_USER_KEY", "env_user_key")
 	t.Setenv("LARK_SESSION_PATH", "/tmp/env-session.json")
 
 	cfg, err := config.Load()
@@ -102,6 +109,9 @@ func TestLoad_EnvOverridesConfigFile(t *testing.T) {
 	}
 	if cfg.PluginSecret != "env_secret" {
 		t.Errorf("PluginSecret = %q", cfg.PluginSecret)
+	}
+	if cfg.UserKey != "env_user_key" {
+		t.Errorf("UserKey = %q", cfg.UserKey)
 	}
 	if cfg.SessionPath != "/tmp/env-session.json" {
 		t.Errorf("SessionPath = %q", cfg.SessionPath)
@@ -125,44 +135,46 @@ func TestLoad_InvalidConfigFileJSONReturnsError(t *testing.T) {
 	}
 }
 
-func TestLoad_ValidateForPluginTokenPassesWithConfigFileCredentials(t *testing.T) {
+func TestLoad_ValidateForOpenAPIPassesWithFullConfig(t *testing.T) {
 	home := setupTempHome(t)
 	writeConfigFile(t, home, `{
   "base_url": "https://file.example.com",
   "plugin_id": "file_id",
-  "plugin_secret": "file_secret"
+  "plugin_secret": "file_secret",
+  "user_key": "file_user_key"
 }`)
 
 	cfg, err := config.Load()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err := cfg.ValidateForPluginToken(); err != nil {
+	if err := cfg.ValidateForOpenAPI(); err != nil {
 		t.Fatalf("expected validate success, got: %v", err)
 	}
 }
 
-func TestValidateForPluginToken_MissingRequired(t *testing.T) {
+func TestValidateForOpenAPI_MissingRequired(t *testing.T) {
 	tests := []struct {
 		name   string
 		config config.Config
 	}{
-		{"missing BaseURL", config.Config{PluginID: "x", PluginSecret: "y"}},
-		{"missing PluginID", config.Config{BaseURL: "x", PluginSecret: "y"}},
-		{"missing PluginSecret", config.Config{BaseURL: "x", PluginID: "y"}},
+		{"missing BaseURL", config.Config{UserKey: "u", PluginID: "x", PluginSecret: "y"}},
+		{"missing UserKey", config.Config{BaseURL: "x", PluginID: "y", PluginSecret: "z"}},
+		{"missing PluginID", config.Config{BaseURL: "x", UserKey: "u", PluginSecret: "y"}},
+		{"missing PluginSecret", config.Config{BaseURL: "x", UserKey: "u", PluginID: "y"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.config.ValidateForPluginToken(); err == nil {
+			if err := tt.config.ValidateForOpenAPI(); err == nil {
 				t.Error("expected error")
 			}
 		})
 	}
 }
 
-func TestValidateForPluginToken_AllPresent(t *testing.T) {
-	c := config.Config{BaseURL: "https://x.com", PluginID: "id", PluginSecret: "secret"}
-	if err := c.ValidateForPluginToken(); err != nil {
+func TestValidateForOpenAPI_AllPresent(t *testing.T) {
+	c := config.Config{BaseURL: "https://x.com", UserKey: "u", PluginID: "id", PluginSecret: "secret"}
+	if err := c.ValidateForOpenAPI(); err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 }

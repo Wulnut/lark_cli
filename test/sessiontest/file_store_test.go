@@ -19,11 +19,13 @@ func TestFileStore_SaveAndLoad(t *testing.T) {
 
 	now := time.Now().Truncate(time.Second)
 	s := &session.Session{
-		Version:   session.CurrentVersion,
-		LoginType: "user_key",
-		UserKey:   "ou_test123",
-		CreatedAt: now,
-		UpdatedAt: now,
+		Version:              session.CurrentVersion,
+		LoginType:           "user_key",
+		ConfigFingerprint:    "fp123",
+		PluginAccessToken:   "token-abc",
+		PluginAccessTokenExpiresAt: now.Add(2 * time.Hour),
+		CreatedAt:           now,
+		UpdatedAt:           now,
 	}
 
 	if err := store.Save(ctx, s); err != nil {
@@ -34,11 +36,14 @@ func TestFileStore_SaveAndLoad(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	if loaded.UserKey != s.UserKey {
-		t.Errorf("UserKey = %q, want %q", loaded.UserKey, s.UserKey)
-	}
 	if loaded.LoginType != "user_key" {
 		t.Errorf("LoginType = %q", loaded.LoginType)
+	}
+	if loaded.ConfigFingerprint != "fp123" {
+		t.Errorf("ConfigFingerprint = %q", loaded.ConfigFingerprint)
+	}
+	if loaded.PluginAccessToken != "token-abc" {
+		t.Errorf("PluginAccessToken = %q", loaded.PluginAccessToken)
 	}
 }
 
@@ -48,7 +53,7 @@ func TestFileStore_Permissions(t *testing.T) {
 	store := session.NewFileStore(path)
 	ctx := context.Background()
 
-	s := &session.Session{Version: session.CurrentVersion, UserKey: "ou_x", CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	s := &session.Session{Version: session.CurrentVersion, LoginType: "user_key", CreatedAt: time.Now(), UpdatedAt: time.Now()}
 	if err := store.Save(ctx, s); err != nil {
 		t.Fatalf("Save: %v", err)
 	}
@@ -69,7 +74,7 @@ func TestFileStore_Delete(t *testing.T) {
 	store := session.NewFileStore(path)
 	ctx := context.Background()
 
-	s := &session.Session{Version: session.CurrentVersion, UserKey: "ou_x", CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	s := &session.Session{Version: session.CurrentVersion, LoginType: "user_key", CreatedAt: time.Now(), UpdatedAt: time.Now()}
 	_ = store.Save(ctx, s)
 
 	if err := store.Delete(ctx); err != nil {
@@ -107,7 +112,7 @@ func TestFileStore_Exists(t *testing.T) {
 		t.Error("should not exist initially")
 	}
 
-	s := &session.Session{Version: session.CurrentVersion, UserKey: "ou_x", CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	s := &session.Session{Version: session.CurrentVersion, LoginType: "user_key", CreatedAt: time.Now(), UpdatedAt: time.Now()}
 	_ = store.Save(ctx, s)
 
 	exists, _ = store.Exists(ctx)
@@ -122,7 +127,7 @@ func TestFileStore_NoLeftoverTmpFiles(t *testing.T) {
 	store := session.NewFileStore(path)
 	ctx := context.Background()
 
-	s := &session.Session{Version: session.CurrentVersion, UserKey: "ou_x", CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	s := &session.Session{Version: session.CurrentVersion, LoginType: "user_key", CreatedAt: time.Now(), UpdatedAt: time.Now()}
 	_ = store.Save(ctx, s)
 
 	entries, _ := os.ReadDir(dir)
@@ -130,5 +135,111 @@ func TestFileStore_NoLeftoverTmpFiles(t *testing.T) {
 		if filepath.Ext(e.Name()) == ".tmp" {
 			t.Errorf("leftover tmp file: %s", e.Name())
 		}
+	}
+}
+
+func TestSession_IsValid(t *testing.T) {
+	now := int64(1000000)
+	validFingerprint := "fp123"
+
+	tests := []struct {
+		name        string
+		sess        *session.Session
+		now         int64
+		fingerprint string
+		want        bool
+	}{
+		{
+			name: "valid session",
+			sess: &session.Session{
+				PluginAccessToken:          "tok",
+				PluginAccessTokenExpiresAt: time.Unix(now+3600, 0),
+				ConfigFingerprint:           validFingerprint,
+			},
+			now:         now,
+			fingerprint: validFingerprint,
+			want:        true,
+		},
+		{
+			name:        "nil session",
+			sess:        nil,
+			now:         now,
+			fingerprint: validFingerprint,
+			want:        false,
+		},
+		{
+			name: "empty token",
+			sess: &session.Session{
+				PluginAccessToken:          "",
+				PluginAccessTokenExpiresAt: time.Unix(now+3600, 0),
+				ConfigFingerprint:          validFingerprint,
+			},
+			now:         now,
+			fingerprint: validFingerprint,
+			want:        false,
+		},
+		{
+			name: "expired token",
+			sess: &session.Session{
+				PluginAccessToken:          "tok",
+				PluginAccessTokenExpiresAt: time.Unix(now-1, 0),
+				ConfigFingerprint:          validFingerprint,
+			},
+			now:         now,
+			fingerprint: validFingerprint,
+			want:        false,
+		},
+		{
+			name: "fingerprint mismatch",
+			sess: &session.Session{
+				PluginAccessToken:          "tok",
+				PluginAccessTokenExpiresAt: time.Unix(now+3600, 0),
+				ConfigFingerprint:          "old_fp",
+			},
+			now:         now,
+			fingerprint: validFingerprint,
+			want:        false,
+		},
+		{
+			name: "exactly at expiry",
+			sess: &session.Session{
+				PluginAccessToken:          "tok",
+				PluginAccessTokenExpiresAt: time.Unix(now, 0),
+				ConfigFingerprint:          validFingerprint,
+			},
+			now:         now,
+			fingerprint: validFingerprint,
+			want:        false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.sess.IsValid(tt.now, tt.fingerprint)
+			if got != tt.want {
+				t.Errorf("IsValid() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSession_IsEmpty(t *testing.T) {
+	tests := []struct {
+		name string
+		sess *session.Session
+		want bool
+	}{
+		{"nil session", nil, true},
+		{"empty token", &session.Session{}, true},
+		{"has token", &session.Session{PluginAccessToken: "tok"}, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.sess.IsEmpty()
+			if got != tt.want {
+				t.Errorf("IsEmpty() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

@@ -1,10 +1,17 @@
 ---
 title: 飞书项目OpenAPI-配置与视图
-tags: [飞书项目, OpenAPI]
-category: 飞书项目
+source: https://project.feishu.cn/b/helpcenter/1p8d7djs
+author:
+published: 2026-03-17
 created: 2026-03-17
 updated: 2026-03-17
-
+description: 飞书项目OpenAPI配置与视图详解，包含空间配置、工作项配置、自定义字段、关系列表、视图管理等API
+tags: [飞书项目, OpenAPI, 配置, 视图, 字段, 工作项类型]
+category: 飞书项目
+related_docs:
+  - "[[飞书项目API开发者知识库]]"
+  - "[[飞书项目OpenAPI完整API列表]]"
+  - "[[飞书项目OpenAPI字段类型汇总]]"
 ---
 
 

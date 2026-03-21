@@ -12,3 +12,7 @@
 - `cmd/root.go` now uses `config.Load()`.
 - Added tests for defaults/file/env precedence/missing file/invalid JSON/config-based credential validation.
 - Updated README with `~/.lark/config.json` usage and config/session responsibility split.
+
+1. 没有创建config.json
+2. plugin id和secret 没有配置的地方
+3. 如果创建空的config.json会出现问题

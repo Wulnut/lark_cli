@@ -1,10 +1,16 @@
 ---
 title: 飞书项目OpenAPI-附件与群组
-tags: [飞书项目, OpenAPI]
-category: 飞书项目
+source: https://project.feishu.cn/b/helpcenter/1p8d7djs
+author:
+published: 2026-03-17
 created: 2026-03-17
 updated: 2026-03-17
-
+description: 飞书项目OpenAPI附件与群组操作详解，包含添加附件、上传文件、下载附件、删除附件及拉机器人入群等API
+tags: [飞书项目, OpenAPI, 附件, 文件, 群组, 机器人]
+category: 飞书项目
+related_docs:
+  - "[[飞书项目API开发者知识库]]"
+  - "[[飞书项目OpenAPI完整API列表]]"
 ---
 
 

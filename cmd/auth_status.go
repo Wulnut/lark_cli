@@ -34,15 +34,15 @@ func NewAuthStatusCmd(deps Deps) *cobra.Command {
 			}
 
 			fmt.Fprintf(deps.Stdout, "Session path: %s\n", deps.Config.SessionPath)
-			fmt.Fprintf(deps.Stdout, "User key:     %s\n", auth.Mask(sess.UserKey))
+			fmt.Fprintf(deps.Stdout, "User key:     %s\n", auth.Mask(deps.Config.UserKey))
 			fmt.Fprintf(deps.Stdout, "Login type:   %s\n", sess.LoginType)
 
 			if refreshToken && deps.PluginTokenProvider != nil {
-				token, err := deps.PluginTokenProvider.ForceRefresh(ctx)
+				authCtx, err := deps.PluginTokenProvider.ForceRefresh(ctx)
 				if err != nil {
 					fmt.Fprintf(deps.Stderr, "Failed to refresh plugin token: %v\n", err)
 				} else {
-					fmt.Fprintf(deps.Stdout, "Plugin token: %s (refreshed)\n", auth.Mask(token))
+					fmt.Fprintf(deps.Stdout, "Plugin token: %s (refreshed)\n", auth.Mask(authCtx.PluginToken))
 					// Reload session to show updated expiry
 					sess, _ = deps.Store.Load(ctx)
 				}

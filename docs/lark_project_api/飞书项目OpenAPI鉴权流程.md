@@ -1,9 +1,18 @@
 ---
 title: 飞书项目OpenAPI鉴权流程
-tags: [飞书项目, OpenAPI, 鉴权]
-category: 飞书项目
+source: https://project.feishu.cn/b/helpcenter/1p8d7djs
+author:
+published: 2026-03-17
 created: 2026-03-17
 updated: 2026-03-17
+description: 飞书项目OpenAPI鉴权流程详解，介绍OAuth 2.0协议下的plugin_access_token和user_access_token认证架构与常见错误码
+tags: [飞书项目, OpenAPI, 鉴权, OAuth2, plugin_token, user_token]
+category: 飞书项目
+related_docs:
+  - "[[飞书项目API开发者知识库]]"
+  - "[[飞书项目OpenAPI完整API列表]]"
+  - "[[飞书项目OpenAPI获取访问凭证]]"
+  - "[[飞书项目OpenAPI概述]]"
 ---
 
 # 飞书项目 OpenAPI 鉴权流程

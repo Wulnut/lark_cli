@@ -1,10 +1,17 @@
 ---
 title: 飞书项目OpenAPI依赖关系
-tags: [飞书项目, OpenAPI]
-category: 飞书项目
+source: https://project.feishu.cn/b/helpcenter/1p8d7djs
+author:
+published: 2026-03-17
 created: 2026-03-17
 updated: 2026-03-17
-
+description: 飞书项目OpenAPI调用架构与依赖关系图，包含鉴权层、基础层、核心层、高级层的四层架构及API依赖链说明
+tags: [飞书项目, OpenAPI, API依赖, 调用流程, 架构]
+category: 飞书项目
+related_docs:
+  - "[[飞书项目API开发者知识库]]"
+  - "[[飞书项目OpenAPI完整API列表]]"
+  - "[[飞书项目OpenAPI鉴权流程]]"
 ---
 
 

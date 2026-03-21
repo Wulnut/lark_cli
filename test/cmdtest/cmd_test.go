@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -15,6 +16,15 @@ import (
 	"lark_cli/internal/config"
 	"lark_cli/internal/session"
 )
+
+// mockConfigStore is a test double for auth.ConfigStore.
+type mockConfigStore struct {
+	cfg *config.Config
+}
+
+func (m *mockConfigStore) Load(ctx context.Context) (*config.Config, error) {
+	return m.cfg, nil
+}
 
 func newTestDeps(t *testing.T) (cmd.Deps, string) {
 	t.Helper()
@@ -26,7 +36,8 @@ func newTestDeps(t *testing.T) (cmd.Deps, string) {
 	deps := cmd.Deps{
 		Config: config.Config{
 			SessionPath: path,
-			BaseURL:     "https://test.example.com",
+			BaseURL:    "https://test.example.com",
+			UserKey:    "",
 		},
 		Store:  store,
 		Stdout: &stdout,
@@ -38,7 +49,23 @@ func newTestDeps(t *testing.T) (cmd.Deps, string) {
 // --- Login Tests ---
 
 func TestLogin_ValidUserKey(t *testing.T) {
-	deps, path := newTestDeps(t)
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	dir := t.TempDir()
+	sessionPath := filepath.Join(dir, "session.json")
+	store := session.NewFileStore(sessionPath)
+	var stdout, stderr bytes.Buffer
+	deps := cmd.Deps{
+		Config: config.Config{
+			SessionPath: sessionPath,
+			BaseURL:    "https://test.example.com",
+			UserKey:    "",
+		},
+		Store:  store,
+		Stdout: &stdout,
+		Stderr: &stderr,
+	}
 
 	root := cmd.NewRootCmd(deps)
 	root.SetArgs([]string{"login", "-w", "user_key", "ou_test123"})
@@ -46,22 +73,41 @@ func TestLogin_ValidUserKey(t *testing.T) {
 		t.Fatalf("login: %v", err)
 	}
 
-	// Verify session was created
-	store := session.NewFileStore(path)
-	sess, err := store.Load(context.Background())
+	// Verify config.json was created with user_key
+	configPath := filepath.Join(home, ".lark", "config.json")
+	data, err := os.ReadFile(configPath)
 	if err != nil {
-		t.Fatalf("Load: %v", err)
+		t.Fatalf("failed to read config file: %v", err)
 	}
-	if sess.UserKey != "ou_test123" {
-		t.Errorf("UserKey = %q", sess.UserKey)
+
+	var cfg map[string]any
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		t.Fatalf("failed to parse config: %v", err)
 	}
-	if sess.LoginType != "user_key" {
-		t.Errorf("LoginType = %q", sess.LoginType)
+
+	if cfg["user_key"] != "ou_test123" {
+		t.Errorf("user_key = %q, want %q", cfg["user_key"], "ou_test123")
 	}
 }
 
 func TestLogin_NonOuPrefixAllowed(t *testing.T) {
-	deps, path := newTestDeps(t)
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	dir := t.TempDir()
+	sessionPath := filepath.Join(dir, "session.json")
+	store := session.NewFileStore(sessionPath)
+	var stdout, stderr bytes.Buffer
+	deps := cmd.Deps{
+		Config: config.Config{
+			SessionPath: sessionPath,
+			BaseURL:    "https://test.example.com",
+			UserKey:    "",
+		},
+		Store:  store,
+		Stdout: &stdout,
+		Stderr: &stderr,
+	}
 
 	root := cmd.NewRootCmd(deps)
 	root.SetArgs([]string{"login", "-w", "user_key", "7387857889332969475"})
@@ -69,13 +115,76 @@ func TestLogin_NonOuPrefixAllowed(t *testing.T) {
 		t.Fatalf("login should accept non-ou key: %v", err)
 	}
 
-	store := session.NewFileStore(path)
-	sess, err := store.Load(context.Background())
+	// Verify config.json was created
+	configPath := filepath.Join(home, ".lark", "config.json")
+	data, err := os.ReadFile(configPath)
 	if err != nil {
-		t.Fatalf("Load: %v", err)
+		t.Fatalf("failed to read config file: %v", err)
 	}
-	if sess.UserKey != "7387857889332969475" {
-		t.Errorf("UserKey = %q", sess.UserKey)
+
+	var cfg map[string]any
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		t.Fatalf("failed to parse config: %v", err)
+	}
+
+	if cfg["user_key"] != "7387857889332969475" {
+		t.Errorf("user_key = %q", cfg["user_key"])
+	}
+}
+
+func TestLogin_PreservesExistingConfigFieldsWhenUpdatingUserKey(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	configDir := filepath.Join(home, ".lark")
+	if err := os.MkdirAll(configDir, 0o755); err != nil {
+		t.Fatalf("mkdir config dir: %v", err)
+	}
+
+	configPath := filepath.Join(configDir, "config.json")
+	seed := map[string]any{
+		"base_url":      "https://seed.example.com",
+		"plugin_id":     "seed_pid",
+		"plugin_secret": "seed_secret",
+		"user_key":      "old_user_key",
+		"session_path":  "/tmp/seed-session.json",
+	}
+	seedBytes, _ := json.Marshal(seed)
+	if err := os.WriteFile(configPath, seedBytes, 0o600); err != nil {
+		t.Fatalf("write seed config: %v", err)
+	}
+
+	deps, _ := newTestDeps(t)
+	root := cmd.NewRootCmd(deps)
+	root.SetArgs([]string{"login", "-w", "user_key", "new_user_key"})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("login: %v", err)
+	}
+
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatalf("read merged config: %v", err)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(data, &got); err != nil {
+		t.Fatalf("unmarshal merged config: %v", err)
+	}
+
+	if got["user_key"] != "new_user_key" {
+		t.Errorf("user_key = %v, want new_user_key", got["user_key"])
+	}
+	if got["base_url"] != "https://seed.example.com" {
+		t.Errorf("base_url changed: %v", got["base_url"])
+	}
+	if got["plugin_id"] != "seed_pid" {
+		t.Errorf("plugin_id changed: %v", got["plugin_id"])
+	}
+	if got["plugin_secret"] != "seed_secret" {
+		t.Errorf("plugin_secret changed: %v", got["plugin_secret"])
+	}
+	if got["session_path"] != "/tmp/seed-session.json" {
+		t.Errorf("session_path changed: %v", got["session_path"])
 	}
 }
 
@@ -115,7 +224,6 @@ func TestLogout_ExistingSession(t *testing.T) {
 	sess := &session.Session{
 		Version:   session.CurrentVersion,
 		LoginType: "user_key",
-		UserKey:   "ou_test",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -168,10 +276,11 @@ func TestAuthStatus_LoggedIn_NoToken(t *testing.T) {
 	deps, path := newTestDeps(t)
 	store := session.NewFileStore(path)
 
+	deps.Config.UserKey = "ou_statustest"
+
 	sess := &session.Session{
 		Version:   session.CurrentVersion,
 		LoginType: "user_key",
-		UserKey:   "ou_statustest",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -211,19 +320,31 @@ func TestAuthStatus_WithRefresh(t *testing.T) {
 	sess := &session.Session{
 		Version:   session.CurrentVersion,
 		LoginType: "user_key",
-		UserKey:   "ou_refresh_test",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
 	_ = store.Save(context.Background(), sess)
 
+	cfgStore := &mockConfigStore{
+		cfg: &config.Config{
+			UserKey:      "ou_refresh_test",
+			PluginID:     "pid",
+			PluginSecret: "psecret",
+			BaseURL:      server.URL,
+		},
+	}
+
 	client := auth.NewPluginTokenClient(server.Client(), server.URL, "pid", "psecret")
-	tokenProvider := auth.NewPluginTokenProvider(store, client, 10*time.Minute)
-	headerProvider := auth.NewHeaderProvider(store, tokenProvider)
+	tokenProvider := auth.NewPluginTokenProvider(cfgStore, store, client, 10*time.Minute)
+	headerProvider := auth.NewHeaderProvider(tokenProvider)
 
 	var stdout, stderr bytes.Buffer
 	deps := cmd.Deps{
-		Config:              config.Config{SessionPath: path},
+		Config: config.Config{
+			SessionPath: path,
+			BaseURL:     server.URL,
+			UserKey:     "ou_refresh_test",
+		},
 		Store:               store,
 		PluginTokenProvider: tokenProvider,
 		HeaderProvider:      headerProvider,
