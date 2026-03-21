@@ -1,17 +1,11 @@
-/*
- * @Author: liangyz liangyz@seirobitcs.net
- * @Date: 2026-03-19 18:26:09
- * @LastEditors: liangyz liangyz@seirobitcs.net
- * @LastEditTime: 2026-03-20 11:25:06
- * @FilePath: \lark_cli\cmd\root.go
- * @Description: root.go
- */
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"lark_cli/internal/auth"
 	"lark_cli/internal/config"
+	"lark_cli/internal/openapi"
 	"lark_cli/internal/session"
 	"lark_cli/internal/tui"
 	"net/http"
@@ -19,6 +13,17 @@ import (
 
 	"github.com/spf13/cobra"
 )
+
+// configStore wraps config loading to implement auth.ConfigStore interface.
+type configStore struct{}
+
+func (c *configStore) Load(ctx context.Context) (*config.Config, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, err
+	}
+	return &cfg, nil
+}
 
 // NewRootCmd creates and returns the root command with subcommands registered.
 func NewRootCmd(deps Deps) *cobra.Command {
@@ -31,7 +36,13 @@ It provides a command line interface to manage and interact with various Feishu 
 			if len(args) > 0 {
 				return cmd.Help()
 			}
-			if err := tui.Run(deps.Stdout); err != nil {
+			var userKey string
+			var apiClient *openapi.Client
+			if deps.PluginTokenProvider != nil {
+				userKey = deps.Config.UserKey
+				apiClient = openapi.NewClient(deps.Config.BaseURL, &http.Client{Timeout: deps.Config.HTTPTimeout}, deps.PluginTokenProvider)
+			}
+			if err := tui.Run(deps.Stdout, userKey, apiClient); err != nil {
 				return fmt.Errorf("interactive UI: %w", err)
 			}
 			return nil
@@ -54,16 +65,17 @@ func Execute() {
 	}
 
 	store := session.NewFileStore(cfg.SessionPath)
+	cfgStore := &configStore{}
 
 	var tokenProvider auth.PluginTokenProvider
 	var headerProvider auth.HeaderProvider
 
 	// Only build token/header providers if plugin credentials are available.
-	if cfg.ValidateForPluginToken() == nil {
+	if cfg.ValidateForOpenAPI() == nil {
 		httpClient := &http.Client{Timeout: cfg.HTTPTimeout}
 		client := auth.NewPluginTokenClient(httpClient, cfg.BaseURL, cfg.PluginID, cfg.PluginSecret)
-		tokenProvider = auth.NewPluginTokenProvider(store, client, cfg.RefreshLeeway)
-		headerProvider = auth.NewHeaderProvider(store, tokenProvider)
+		tokenProvider = auth.NewPluginTokenProvider(cfgStore, store, client, cfg.RefreshLeeway)
+		headerProvider = auth.NewHeaderProvider(tokenProvider)
 	}
 
 	deps := Deps{
