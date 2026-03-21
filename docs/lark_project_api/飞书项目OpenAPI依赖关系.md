@@ -6,12 +6,16 @@ published: 2026-03-17
 created: 2026-03-17
 updated: 2026-03-17
 description: 飞书项目OpenAPI调用架构与依赖关系图，包含鉴权层、基础层、核心层、高级层的四层架构及API依赖链说明
-tags: [飞书项目, OpenAPI, API依赖, 调用流程, 架构]
-category: 飞书项目
+tags:
+  - "飞书项目"
+  - "OpenAPI"
+  - "API依赖"
+  - "调用流程"
+  - "架构"
+category: "飞书项目"
 related_docs:
   - "[[飞书项目API开发者知识库]]"
   - "[[飞书项目OpenAPI完整API列表]]"
-  - "[[飞书项目OpenAPI鉴权流程]]"
 ---
 
 
@@ -294,10 +298,9 @@ app_id + app_secret
 ---
 ## 相关文档
 - [[飞书项目OpenAPI完整API列表]] - 主索引文档
-- [[飞书项目OpenAPI鉴权流程]] - 认证流程
-- [[飞书项目OpenAPI-工作项实例搜索]] - 工作项搜索
-- [[飞书项目OpenAPI-工作项实例读写]] - 工作项CRUD
-- [[飞书项目OpenAPI-工作项流程与节点]] - 流程管理
+- [[飞书项目OpenAPI概述]] - API 概述
+- [[搜索参数格式及常用示例 - 开发者手册 - 飞书项目帮助中心]] - 搜索参数
+- [[创建工作项 - 开发者手册 - 飞书项目帮助中心]] - 工作项 CRUD
 ---
 ## 🏷️ 标签
 #飞书项目 #OpenAPI #API依赖 #调用流程 #鉴权

@@ -6,8 +6,17 @@ published:
 created: 2026-03-19
 updated: 2026-03-19
 description: "飞书项目官方 OpenAPI 完整列表，包含用户、空间、工作项、配置、视图、评论、度量等模块共 82 个 API"
-tags: [飞书项目, OpenAPI, 官方文档, API列表, 工作项, 配置, 视图, 评论, 度量]
-category: 飞书项目
+tags:
+  - "飞书项目"
+  - "OpenAPI"
+  - "官方文档"
+  - "API列表"
+  - "工作项"
+  - "配置"
+  - "视图"
+  - "评论"
+  - "度量"
+category: "飞书项目"
 api_version: "2.0.0"
 api_count: 82
 related_docs:

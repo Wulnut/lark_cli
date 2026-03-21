@@ -6,12 +6,16 @@ published:
 created: 2026-03-19
 updated: 2026-03-19
 description: "飞书项目 Open API 错误码详解，包含 HTTP 状态码、err_code 错误码的具体含义、产生原因和排查建议"
-tags: [飞书项目, OpenAPI, 错误码, err_code, HTTP状态码, 排查建议]
-category: 飞书项目
+tags:
+  - "飞书项目"
+  - "OpenAPI"
+  - "错误码"
+  - "err_code"
+  - "HTTP状态码"
+  - "排查建议"
+category: "飞书项目"
 related_docs:
-  - "[[飞书项目API开发者知识库]]"
   - "[[API 列表 - 开发者手册 - 飞书项目帮助中心]]"
-  - "[[飞书项目OpenAPI完整API列表]]"
 ---
 
 本文档详细解释了 Open API 的各类错误码，包括其具体含义、产生原因和推荐的解决方法。

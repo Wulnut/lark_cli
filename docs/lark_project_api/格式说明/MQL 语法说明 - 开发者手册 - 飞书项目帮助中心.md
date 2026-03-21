@@ -6,13 +6,19 @@ published:
 created: 2026-03-19
 updated: 2026-03-19
 description: "飞书项目 MQL (Meego Query Language) 语法说明，是一种专用的结构化查询语言，兼容 SQL 语法，包含数据类型、函数和查询示例"
-tags: [飞书项目, OpenAPI, MQL, 查询语法, SQL, 函数, 数组函数, 相对时间]
-category: 飞书项目
+tags:
+  - "飞书项目"
+  - "OpenAPI"
+  - "MQL"
+  - "查询语法"
+  - "SQL"
+  - "函数"
+  - "数组函数"
+  - "相对时间"
+category: "飞书项目"
 related_docs:
-  - "[[飞书项目API开发者知识库]]"
   - "[[全量搜索参数格式及常用示例 - 开发者手册 - 飞书项目帮助中心]]"
   - "[[数据结构汇总 - 开发者手册 - 飞书项目帮助中心]]"
-  - "[[飞书项目OpenAPI完整API列表]]"
 ---
 
 Meego Query Language（简称 MQL）是对飞书项目系统中的数据进行结构化查询的一种专用查询语言。基于该语法，飞书项目 MCP Server 中的 `search_by_mql` tool 提供了 MQL 入参查询实例的能力。

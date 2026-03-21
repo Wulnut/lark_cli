@@ -6,12 +6,15 @@ published: 2026-03-18
 created: 2026-03-18
 updated: 2026-03-18
 description: 飞书项目OpenAPI概述，介绍开放平台提供的OpenAPI能力，实现数据的获取与操作，包含API结构、认证流程和基础概念
-tags: [飞书项目, OpenAPI, 概述, 认证]
-category: 飞书项目
+tags:
+  - "飞书项目"
+  - "OpenAPI"
+  - "概述"
+  - "认证"
+category: "飞书项目"
 related_docs:
   - "[[飞书项目API开发者知识库]]"
   - "[[飞书项目OpenAPI完整API列表]]"
-  - "[[飞书项目OpenAPI鉴权流程]]"
   - "[[飞书项目OpenAPI获取访问凭证]]"
 ---
 
@@ -117,7 +120,6 @@ https://project.feishu.cn/open_api/projectkeyisme/work_item/create
 ## 相关文档
 
 - [[飞书项目OpenAPI完整API列表]] - 完整 API 列表
-- [[飞书项目OpenAPI鉴权流程]] - 鉴权流程
 - [[飞书项目OpenAPI依赖关系]] - API 依赖关系
 
 ---
