@@ -34,24 +34,48 @@ type QueryUserResponse struct {
 	Data    []UserInfo `json:"data"`
 }
 
-// QueryCurrentUser calls POST /open_api/user/query with a single user_key.
-// Returns the first user in the data list, or nil if the result is empty.
-// Returns error only on network failure or unexpected response shape.
-func (c *Client) QueryCurrentUser(ctx context.Context, userKey string) (*UserInfo, error) {
-	if userKey == "" {
-		return nil, fmt.Errorf("userKey is required")
+// QueryUsers calls POST /open_api/user/query with a list of user_keys.
+// Returns a map of user_key -> UserInfo for all found users.
+func (c *Client) QueryUsers(ctx context.Context, userKeys []string) (map[string]*UserInfo, error) {
+	if len(userKeys) == 0 {
+		return nil, nil
 	}
 	var resp QueryUserResponse
 	err := c.DoJSON(ctx, &Request{
 		Method: "POST",
 		Path:   "open_api/user/query",
-		Body:   map[string][]string{"user_keys": {userKey}},
+		Body:   map[string][]string{"user_keys": userKeys},
 	}, &resp)
 	if err != nil {
 		return nil, err
 	}
-	if len(resp.Data) == 0 {
-		return nil, nil // no user found, not an error
+	result := make(map[string]*UserInfo, len(resp.Data))
+	for i := range resp.Data {
+		result[resp.Data[i].UserKey] = &resp.Data[i]
 	}
-	return &resp.Data[0], nil
+	return result, nil
+}
+
+// QueryCurrentUser calls POST /open_api/user/query with a single user_key.
+// Returns the first user in the data list, or nil if the result is empty.
+func (c *Client) QueryCurrentUser(ctx context.Context, userKey string) (*UserInfo, error) {
+	if userKey == "" {
+		return nil, fmt.Errorf("userKey is required")
+	}
+	users, err := c.QueryUsers(ctx, []string{userKey})
+	if err != nil {
+		return nil, err
+	}
+	if len(users) == 0 {
+		return nil, nil
+	}
+	if u, ok := users[userKey]; ok && u != nil {
+		return u, nil
+	}
+	for _, u := range users {
+		if u != nil {
+			return u, nil
+		}
+	}
+	return nil, nil
 }

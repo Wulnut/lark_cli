@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"lark_cli/cmd/project"
 	"lark_cli/internal/auth"
 	"lark_cli/internal/config"
 	"lark_cli/internal/openapi"
@@ -52,6 +53,7 @@ It provides a command line interface to manage and interact with various Feishu 
 	rootCmd.AddCommand(NewLoginCmd(deps))
 	rootCmd.AddCommand(NewLogoutCmd(deps))
 	rootCmd.AddCommand(NewAuthCmd(deps))
+	rootCmd.AddCommand(project.NewProjectCmd(deps))
 
 	return rootCmd
 }
